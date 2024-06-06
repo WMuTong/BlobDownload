@@ -1,0 +1,11 @@
+#list {
+  width: 200px;
+}
+#list .item {
+  padding: 5px;
+  border-bottom: 1px solid #ccc;
+  cursor: pointer;
+}
+#list .item:hover {
+  background-color: #eee;
+}
