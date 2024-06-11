@@ -68,14 +68,14 @@ ts_urls = re.findall(r'(https://.*?\.ts\?.*?)\n', m3u8_content)
 download_bar = tqdm.tqdm(total=len(ts_urls), desc="下载和解密TS文件")
 
 # 待解密的 TS 文件集合
-encrypted_files = []
+encrypted_files_path = []
 # 解密后的 TS 文件集合
-decrypted_files = []
+decrypted_files_path = []
 # m3u8 文件名前缀
 m3u8_filename_title = m3u8_filename.replace(".m3u8", "")
 for i, ts_url in enumerate(ts_urls):
     ts_filename = f"{m3u8_filename_title}_{i}.ts"
-    decrypted_filename = f"{m3u8_filename_title}_{i}.ts"
+    decrypted_filename = f"{m3u8_filename_title}_{i}_out.ts"
     
     ts_file_path = os.path.join(download_path, ts_filename)
     decrypted_file_path = os.path.join(download_path, decrypted_filename)
@@ -89,9 +89,16 @@ for i, ts_url in enumerate(ts_urls):
     ts_response.raise_for_status()
     with open(ts_file_path, "wb") as ts_file:
         ts_file.write(ts_response.content)
+        
+    # 验证文件是否成功写入
+    if os.path.exists(ts_file_path):
+        if os.path.getsize(ts_file_path) < 1:
+            print("文件写入失败, 文件大小为0字节")
+    else:
+        print("文件写入失败, 文件不存在")
     
     # 将 TS 文件添加到待解密集合中
-    encrypted_files.append(ts_file_path)
+    encrypted_files_path.append(ts_file_path)
 
     # 解密 TS 文件
     openssl_cmd = [
@@ -115,22 +122,22 @@ for i, ts_url in enumerate(ts_urls):
         exit(0)
         continue
 
-    decrypted_files.append(decrypted_file_path)
+    decrypted_files_path.append(decrypted_file_path)
 
 print("解密完成！")
 print("合并中...")
 # 合并解密后的 TS 文件
 concat_list_filename = "concat_list.txt"
 concat_list_filen_path = os.path.join(download_path, concat_list_filename)
-with open(concat_list_filename, "w") as concat_list_file:
-    for decrypted_file in decrypted_files:
+with open(concat_list_filen_path, "w") as concat_list_file:
+    for decrypted_file in decrypted_files_path:
         concat_list_file.write(f"file '{decrypted_file}'\n")
 
 # 使用 ffmpeg 合并 TS 文件为 MP4
 output_filename = f"{m3u8_filename_title}.mp4"
 output_file_path = os.path.join(download_path, output_filename)
 ffmpeg_cmd = [
-    "ffmpeg", "-f", "concat", "-safe", "0", "-i", concat_list_filen_path, "-c", "copy", output_filename
+    "ffmpeg", "-f", "concat", "-safe", "0", "-i", concat_list_filen_path, "-c", "copy", output_file_path
 ]
 
 # 执行 ffmpeg 命令
@@ -139,14 +146,15 @@ result = subprocess.run(ffmpeg_cmd, capture_output=True, text=True)
 if result.returncode != 0:
     print(f"Error: FFmpeg concatenation failed")
     print(result.stderr)
+    print(" ".join(ffmpeg_cmd))
 else:
     print(f"合并完成，输出文件：{output_filename}")
     
 print("清理临时文件...")
 # 删除临时文件
-for encrypted_filename in encrypted_files:
+for encrypted_filename in encrypted_files_path:
     os.remove(encrypted_filename)
-for decrypted_filename in decrypted_files:
+for decrypted_filename in decrypted_files_path:
     os.remove(decrypted_filename)
 os.remove(concat_list_filen_path)
 print("清理完成! 圆满完成所有步骤！！！")
