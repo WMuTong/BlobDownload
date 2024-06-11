@@ -42,7 +42,9 @@ const haijiao = {
         },
         {},
       );
-    }
+    },
+    "downloadM3u8": downloadFile,
+    "downloadPage": downloadPage
   }
 };
 /*-end-----------------海角相关--------------------*/
@@ -64,11 +66,32 @@ chrome.webRequest.onCompleted.addListener(
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if(message.type === 'DOWNLOAD') {
     sendResponse(`background已收到消息: ${message.type} - ${JSON.stringify(message.data)}`)
-    downloadFile(...message.data);
+    haijiao.todo["downloadM3u8"](...message.data);
   };
   
 });
 /*-end-----------------消息相关--------------------*/
+
+/*-start-----------------右键菜单--------------------*/
+chrome.runtime.onInstalled.addListener(() => {
+  // 添加右键菜单内容
+  chrome.contextMenus.create({
+    id: "haijiaoSavePageAs",
+    title: "海角保存网页",
+    contexts: ["page"]
+  });
+});
+
+// 监听右键菜单点击事件
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId === "haijiaoSavePageAs") {
+    chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      function: downloadPage
+    });
+  }
+});
+/*-end-----------------右键菜单--------------------*/
 
 /*-start-----------------下载相关--------------------*/
 // 通过url将文件下载到本地
@@ -91,5 +114,48 @@ async function downloadFile(url, name) {
     console.error('Failed to download TS file:', error);
     return { success: false, error: error.message };
   }
+}
+
+// 下载页面
+async function downloadPage() {
+  const title = document.querySelector(".header .position-relative span").textContent;
+  // 获取所有外部CSS样式内容
+  const stylesheets = Array.from(document.styleSheets).filter(sheet => sheet.href);
+  const cssPromises = stylesheets.map(sheet => fetch(sheet.href).then(res => res.text()));
+  const cssContents = await Promise.all(cssPromises);
+
+  // 获取所有内嵌CSS样式
+  const inlineStyles = Array.from(document.querySelectorAll('style')).map(style => style.textContent);
+
+  // 创建一个新的HTML文档并插入所有CSS样式
+  const doc = document.implementation.createHTMLDocument(document.title);
+  const base = doc.createElement('base');
+  base.href = document.location.href;
+  doc.head.appendChild(base);
+
+  cssContents.forEach(css => {
+    const style = doc.createElement('style');
+    style.textContent = css;
+    doc.head.appendChild(style);
+  });
+
+  inlineStyles.forEach(css => {
+    const style = doc.createElement('style');
+    style.textContent = css;
+    doc.head.appendChild(style);
+  });
+
+  doc.body.innerHTML = document.body.innerHTML;
+
+  // 创建Blob并下载文件
+  const blob = new Blob([doc.documentElement.outerHTML], { type: "text/html" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = title + ".html";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 /*-end-----------------下载相关--------------------*/

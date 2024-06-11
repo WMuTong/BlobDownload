@@ -44,7 +44,7 @@ $(function () {
     }
   );
 
-  // 绑定事件
+  // 绑定事件, 点击视频名称下载m3u8 及 html 页面
   $("#list").on("click", "div.item", function (e) {
     const url = $(this).data("url");
     const title = $(this).data("title");
