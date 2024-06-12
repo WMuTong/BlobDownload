@@ -17,3 +17,7 @@ pip install <package_name>
 <!--- 运行 -->
 python m3u8.py
 ```
+
+### 其他
+`sort_ts.py` 
++ 手动将download文件夹下的ts文件根据名称中的数字进行排序后创建 concat.txt 文件
