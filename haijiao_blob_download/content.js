@@ -26,13 +26,15 @@ const MessageObject = {
       },
       // 向 popup 发送添加 url 消息
       'ADDM3U8URLTOPOPUP': (data) => {
-        if (!MessageObject['HAIJIAO'].m3u8s.includes(data.url)) {
+        const dataUrlIdx = MessageObject['HAIJIAO'].m3u8s.findIndex(m => m.url === data.url);
+
+        if (data.url && dataUrlIdx < 0) {
           const title = document.querySelector(".header .position-relative span").textContent;
+          
           MessageObject['HAIJIAO'].m3u8s.push({
             url: data.url,
             title: sanitizeFilename(title)
           });
-          console.log(title)
           chrome.runtime.sendMessage({
             type: 'POPUP_ADDM3U8',
             data: {

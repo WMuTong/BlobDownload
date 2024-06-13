@@ -4,7 +4,6 @@ const MessageObject = {
       // 向 popup list 中插入 url 列表
       'ADDM3U8': (data) => {
         data?.m3u8s?.map(m3u8 => {
-          if($('#list').find('.notData').length > 0) $('#list').html("");
           $('#list').append(`<div class="item" data-url="${m3u8.url}" data-title="${m3u8.title}">${m3u8.title}</div>`);
         })
       }

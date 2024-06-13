@@ -92,6 +92,9 @@ concat_list_filen_path = os.path.join(download_path, concat_list_filename)
 # 读取已存在的文件列表
 existing_files = set(read_concat_list(concat_list_filen_path))
 
+# 跳过下载的 TS 文件数量
+continue_decrypted_file_n = 0
+
 for i, ts_url in enumerate(ts_urls):
     ts_filename = f"{m3u8_filename_title}_{i}.ts"
     decrypted_filename = f"{m3u8_filename_title}_{i}_out.ts"
@@ -101,9 +104,12 @@ for i, ts_url in enumerate(ts_urls):
     
     # 该条 ts 文件已存在，跳过下载和解密
     if decrypted_file_path in existing_files:
-        download_bar.update(1)
+        continue_decrypted_file_n += 1
         continue
+    else:
+        continue_decrypted_file_n = 1
     
+    download_bar.update(continue_decrypted_file_n)
     # 下载 TS 文件
     ts_response = requests.get(ts_url)
     # 检查响应状态码
@@ -170,16 +176,11 @@ if result.returncode != 0:
     print(f"Error: FFmpeg concatenation failed")
     print(result.stderr)
     print(" ".join(ffmpeg_cmd))
-    # 删除待解密临时文件
-    for encrypted_filename in encrypted_files_path:
-        os.remove(encrypted_filename)
     print("合并失败，未清理临时文件，请手动合并！")
 else:
     print(f"合并完成，输出文件：{output_filename}")
     print("清理临时文件...")
     # 删除临时文件
-    for encrypted_filename in encrypted_files_path:
-        os.remove(encrypted_filename)
     for decrypted_filename in decrypted_files_path:
         os.remove(decrypted_filename)
     os.remove(concat_list_filen_path)
