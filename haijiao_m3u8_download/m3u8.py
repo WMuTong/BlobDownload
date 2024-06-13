@@ -151,7 +151,7 @@ for i, ts_url in enumerate(ts_urls):
     # 将解密成功的TS 文件路径添加到解密后集合中
     decrypted_files_path.append(decrypted_file_path)
     # 将解密后的TS文件路径写入合并列表文件
-    write_concat_list_entry(decrypted_file_path, concat_list_filen_path)
+    write_concat_list_entry(os.path.join('../', decrypted_file_path), concat_list_filen_path)
 
 print("下载并解密完成！")
 print("合并中...")
@@ -182,5 +182,5 @@ else:
         os.remove(encrypted_filename)
     for decrypted_filename in decrypted_files_path:
         os.remove(decrypted_filename)
-    # os.remove(concat_list_filen_path)
+    os.remove(concat_list_filen_path)
     print("清理完成! 圆满完成所有步骤！！！")
