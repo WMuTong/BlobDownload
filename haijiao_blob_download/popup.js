@@ -13,7 +13,6 @@ const MessageObject = {
 
 // 接受消息
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log(message)
   if (message?.type?.indexOf('_') > 0) {
     const [type, todu] = message.type.split('_');
 
@@ -44,7 +43,7 @@ $(function () {
   );
 
   // 绑定事件, 点击视频名称下载m3u8 及 html 页面
-  $("#list").on("click", "div.item", function (e) {
+  $("#list").off("click", "div.item").on("click", "div.item", function (e) {
     const url = $(this).data("url");
     const title = $(this).data("title");
 
