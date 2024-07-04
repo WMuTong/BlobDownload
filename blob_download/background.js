@@ -5,7 +5,7 @@ const haijiao = {
     // 匹配规则
     match: {
       // 匹配规则
-      rules: [
+      urls: [
         {
           // 获取 m3u8 内容的接口
           rule: /^https:\/\/www\.haijiao\.com\/api\/address\/.*$/,
@@ -18,13 +18,13 @@ const haijiao = {
     }
   },
   /**
-   * 检测符合的配置
+   * 检测请求地址符合的配置
    * @param {<string>} url '请求地址'
    * @param {'beforeRequest'|'completed'} type '响应位置'
    */
-  detection: (details, type) => {
-    for (let i = 0; i < haijiao.config.match.rules.length; i++) {
-      const rule = haijiao.config.match.rules[i];
+  detectionFetchUrl: (details, type) => {
+    for (let i = 0; i < haijiao.config.match.urls.length; i++) {
+      const rule = haijiao.config.match.urls[i];
       if (details.url?.match(rule.rule)) {
         haijiao.todo?.[rule.todo?.[type]]?.(details);
         break;
@@ -54,7 +54,7 @@ const haijiao = {
 chrome.webRequest.onCompleted.addListener(
   function (details) {
     if (details.statusCode === 200) {
-      haijiao.detection(details, 'completed');
+      haijiao.detectionFetchUrl(details, 'completed');
     }
   },
   { urls: ["<all_urls>"] }

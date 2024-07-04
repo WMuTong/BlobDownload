@@ -1,3 +1,4 @@
+/*-start------------Message相关------------------*/
 const MessageObject = {
   'HAIJIAO': {
     m3u8s: [],
@@ -30,7 +31,7 @@ const MessageObject = {
 
         if (data.url && dataUrlIdx < 0) {
           const title = document.querySelector(".header .position-relative span").textContent;
-          
+
           MessageObject['HAIJIAO'].m3u8s.push({
             url: data.url,
             title: sanitizeFilename(title)
@@ -63,6 +64,148 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     );
   }
 });
+/*-end------------Message相关------------------*/
+
+/*-start-----------------Telegram私密群相关--------------------*/
+const telegram = {
+  config: {
+    // 匹配规则
+    match: {
+      // 匹配规则
+      urls: [
+        {
+          // 获取 m3u8 内容的接口
+          rule: /^https:\/\/web\.telegram\.org\/.*$/,
+          // 在 telegram.todo 中定义的对应处理方法
+          todo: {
+            'completed': 'mutationObserverVideo'
+          }
+        }
+      ]
+    }
+  },
+  /**
+   * 检测网站地址符合的配置
+   * @param {<string>} href '网站地址'
+   * @param {'beforeRequest'|'completed'} type '响应位置'
+   */
+  detectionLoactionHref: (href, type) => {
+    for (let i = 0; i < telegram.config.match.urls.length; i++) {
+      const rule = telegram.config.match.urls[i];
+      if (href?.match(rule.rule)) {
+        telegram.todo?.[rule.todo?.[type]]?.(href);
+        break;
+      }
+    }
+  },
+  todo: {
+    // 监听视频标签
+    mutationObserverVideo() {
+      // 添加css文件
+      function addCSSFile() {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = chrome.runtime.getURL('styles.css');
+        console.log(link.href)
+        document.head.appendChild(link);
+      }
+      // 在video添加下载按钮
+      function addButtonToVideo(video) {
+        const span = document.createElement('span');
+        span.textContent = "下载";
+        span.classList.add('download_video');
+
+        span.setAttribute('data-video-src', video.src);
+        span.addEventListener('click', (e) => handleClick(e));
+
+        video.parentNode.style.position = 'relative';
+        video.parentNode.insertBefore(span, video.nextSibling);
+      };
+      async function handleClick(e) {
+        const videoSrc = e.target.getAttribute('data-video-src');
+
+        const url = "https://web.telegram.org/k/stream/%7B%22dcId%22%3A5%2C%22location%22%3A%22_%22%3A%22inputDocumentFileLocation%22%2C%22id%22%3A%226062094661810392854%22%2C%22access_hash%22%3A%22808550630272508429%22%2C%22file_reference%22%3A%5B4%2C109%2C190%2C246%2C215%2C0%2C0%2C0%2C63%2C102%2C131%2C109%2C31%2C108%2C80%2C115%2C16%2C170%2C23%2C79%2C60%2C213%2C192%2C44%2C78%2C23%2C42%2C30%2C166%5D%7D%2C%22size%22%3A1632558%2C%22mimeType%22%3A%22video%2Fmp4%22%2C%22fileName%22%3A%22video.mp4%22%7D";
+        const decodedURL = decodeURIComponent(url);
+        console.log(decodedURL);
+
+        try {
+          const response = await fetch(videoSrc, {
+            method: 'GET',
+            headers: {
+              'sec-ch-ua': '"Not/A)Brand";v="8", "Chromium";v="126", "Google Chrome";v="126"',
+              'Referer': 'https://web.telegram.org/k/',
+              'sec-ch-ua-mobile': '?0',
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+              'Range': 'bytes=0-',
+              'sec-ch-ua-platform': '"macOS"',
+              'Accept': 'video/mp4,*/*;q=0.9',
+              'Accept-Encoding': 'identity;q=1, *;q=0',
+              'Cache-Control': 'no-cache',
+              'Pragma': 'no-cache',
+              'Priority': 'u=1, i',
+              'Sec-Fetch-Dest': 'empty',
+              'Sec-Fetch-Mode': 'cors',
+              'Sec-Fetch-Site': 'same-origin',
+              'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8'
+            },
+            credentials: 'include', // Include credentials if needed
+            mode: 'cors' // Use cors mode
+          });
+          
+          if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+
+            a.style.display = 'none';
+            a.href = url;
+            a.download = 'video.mp4';
+            document.body.appendChild(a);
+            a.click();
+
+            window.URL.revokeObjectURL(url);
+          } else {
+            console.error('Failed to fetch video:', response.status, response.statusText);
+          }
+        } catch (error) {
+          console.error('Error fetching video:', error);
+        }
+      }
+
+      addCSSFile();
+      document.querySelectorAll('video').forEach(addButtonToVideo);
+
+      const observer = new MutationObserver((mutationsList) => {
+        for (const mutation of mutationsList) {
+          if (mutation.type === 'childList') {
+            mutation.addedNodes.forEach(node => {
+              if (node.tagName === 'VIDEO') {
+                addButtonToVideo(node);
+              }
+              // else if (node.querySelectorAll) {
+              //   node.querySelectorAll('video').forEach(addSpanToVideo);
+              // }
+            });
+          }
+        }
+      });
+
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true
+      });
+    }
+  }
+};
+/*-end-----------------Telegram私密群相关--------------------*/
+
+/*-start------------Document 相关------------------*/
+document.addEventListener('DOMContentLoaded', () => {
+  // 尝试匹配 telegram 相关操作
+  telegram.detectionLoactionHref(location.href, 'completed');
+})
+/*-end------------Document 相关------------------*/
 
 /*-start------------工具------------------*/
 // 提取 m3u8 中的信息
@@ -120,7 +263,7 @@ function sanitizeFilename(filename) {
 function getAllResources() {
   const urls = [];
   const elements = document.querySelectorAll('img, link[rel="stylesheet"], script[src]');
-  
+
   elements.forEach(element => {
     if (element.tagName === 'IMG' && element.src) {
       urls.push(element.src);
