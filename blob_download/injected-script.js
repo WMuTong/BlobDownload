@@ -16,7 +16,7 @@ window.Telegram = {
             throw new Error(`Failed to fetch range ${start}-${end}: ${response.status} ${response.statusText}`);
         }
     },
-    async downloadVideo(url) {
+    async downloadVideo(url, target) {
         try {
             // 解析url参数
             const urlParams = JSON.parse(decodeURIComponent(url.replace('https://web.telegram.org/k/stream/', '')));
@@ -36,9 +36,14 @@ window.Telegram = {
                 chunks.push(chunk);
                 start += chunkSize;
 
+                let progress = parseInt(end / fileSize * 100);
+                target.innerText = `合成中 ${progress}%`;
+
                 if(start < fileSize) await whileFetch();
             };
             await whileFetch();
+
+            target.innerText = `开始下载 ${(fileSize / 1024 / 1024).toFixed(2)}MB`;
 
             const completeBlob = new Blob(chunks, { type: 'video/mp4' });
             const downloadUrl = window.URL.createObjectURL(completeBlob);
@@ -64,6 +69,6 @@ parent?.[0].addEventListener('click', function (event) {
     var target = event.target;
 
     if (target.classList.contains('download_video')) {
-        window.Telegram.downloadVideo(target.getAttribute('data-video-src'));
+        window.Telegram.downloadVideo(target.getAttribute('data-video-src'), target);
     }
 });

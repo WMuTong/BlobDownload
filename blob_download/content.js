@@ -137,43 +137,10 @@ const telegram = {
         span.classList.add('download_video');
 
         span.setAttribute('data-video-src', video.src);
-        // span.addEventListener('click', (e) => handleClick(e));
 
         video.parentNode.style.position = 'relative';
         video.parentNode.insertBefore(span, video.nextSibling);
       };
-      async function handleClick(e) {
-        const videoSrc = e.target.getAttribute('data-video-src');
-        console.log(videoSrc);
-
-        MessageObject['TELEGRAM'].todu['SENDTOFETCHMP4'](videoSrc);
-
-        try {
-          const response = await fetch(videoSrc, {
-            method: 'GET',
-            mode: 'cors', // 如果存在CORS问题，尝试禁用此行或调整
-            credentials: 'include' // 如果需要发送cookies进行身份验证
-          });
-
-          if (response.ok) {
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-
-            a.style.display = 'none';
-            a.href = url;
-            a.download = 'video.mp4';
-            document.body.appendChild(a);
-            a.click();
-
-            window.URL.revokeObjectURL(url);
-          } else {
-            console.error('Failed to fetch video:', response.status, response.statusText);
-          }
-        } catch (error) {
-          console.error('Error fetching video:', error);
-        }
-      }
 
       setTimeout(() => injectedScript(), 3000);
       addCSSFile();
