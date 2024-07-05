@@ -49,6 +49,52 @@ const haijiao = {
 };
 /*-end-----------------海角相关--------------------*/
 
+/*-start-----------------Telegram私密群相关--------------------*/
+const telegram = {
+  config: {},
+  detectionFetchUrl: () => { },
+  // 执行
+  todo: {
+    'fetchMp4': (tabId, url) => {
+      chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        files: ['inject.js']
+      });
+return;
+
+      url = 'https://web.telegram.org/k/stream/%7B%22dcId%22%3A5%2C%22location%22%3A%7B%22_%22%3A%22inputDocumentFileLocation%22%2C%22id%22%3A%226071294919845089031%22%2C%22access_hash%22%3A%22-7985772992753784704%22%2C%22file_reference%22%3A%5B4%2C109%2C190%2C246%2C215%2C0%2C0%2C0%2C64%2C102%2C135%2C151%2C136%2C44%2C171%2C34%2C183%2C33%2C255%2C244%2C199%2C49%2C235%2C166%2C231%2C204%2C239%2C237%2C71%5D%7D%2C%22size%22%3A3735547%2C%22mimeType%22%3A%22video%2Fmp4%22%2C%22fileName%22%3A%22video.mp4%22%7D';
+      fetch(url, {
+        method: 'GET',
+        mode: 'cors',
+        credentials: 'include'
+      })
+        .then(response => response.blob())
+        .then(blob => {
+          // downloadFile(URL.createObjectURL(blob), 'video.mp4');
+          const reader = new FileReader();
+          reader.onload = function () {
+            const dataUrl = reader.result;
+            chrome.scripting.executeScript({
+              target: { tabId: tabId },
+              func: (dataUrl, filename) => {
+                const link = document.createElement('a');
+                link.href = dataUrl;
+                link.download = filename;
+                link.click();
+              },
+              args: [dataUrl, 'video.mp4']
+            });
+          };
+          reader.readAsDataURL(blob);
+        })
+        .catch(error => {
+          console.log({ status: 'error', error: error });
+        });
+    }
+  }
+}
+/*-end-----------------Telegram私密群相关--------------------*/
+
 /*-start-----------------请求相关--------------------*/
 // 在请求成功处理后触发
 chrome.webRequest.onCompleted.addListener(
@@ -64,11 +110,17 @@ chrome.webRequest.onCompleted.addListener(
 /*-start-----------------消息相关--------------------*/
 // 接收消息
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if(message.type === 'DOWNLOAD') {
-    sendResponse(`background已收到消息: ${message.type} - ${JSON.stringify(message.data)}`)
-    haijiao.todo["downloadM3u8"](...message.data);
-  };
-  
+  switch (message.type) {
+    case 'DOWNLOAD':
+      haijiao.todo["downloadM3u8"](...message.data);
+      break;
+    case 'FETCH_MP4':
+      telegram.todo["fetchMp4"](sender.tab.id, ...message.data);
+      break;
+    default:
+      sendResponse(`background已收到消息: ${message.type} - ${JSON.stringify(message.data)}`)
+      break;
+  }
 });
 /*-end-----------------消息相关--------------------*/
 
