@@ -51,7 +51,7 @@ window.Telegram = {
 
             a.style.display = 'none';
             a.href = downloadUrl;
-            a.download = 'video.mp4';
+            a.download = `${fileSize}.mp4`;
             document.body.appendChild(a);
             a.click();
 
