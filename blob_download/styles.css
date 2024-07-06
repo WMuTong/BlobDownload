@@ -13,3 +13,8 @@ span.download_video {
 span.download_video:hover {
     background-color: rgba(255, 87, 24, 0.8);
 }
+
+.ckin__player span.download_video {
+    top: 2px;
+    bottom: auto;
+}

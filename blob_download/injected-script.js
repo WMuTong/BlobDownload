@@ -64,11 +64,31 @@ window.Telegram = {
 }
 
 var parent = document.querySelectorAll('.bubbles');
-// 绑定事件委托
-parent?.[0].addEventListener('click', function (event) {
-    var target = event.target;
 
+function startDown(event) {
+    var target = event.target;
     if (target.classList.contains('download_video')) {
+        event.stopPropagation();
         window.Telegram.downloadVideo(target.getAttribute('data-video-src'), target);
     }
-});
+}
+
+// 绑定事件委托
+parent?.[0].addEventListener('click', startDown);
+
+const observer = new MutationObserver((mutationsList) => {
+    for (const mutation of mutationsList) {
+      if (mutation.type === 'childList') {
+        mutation.addedNodes.forEach(node => {
+          if (node.tagName === 'DIV' && node.classList.contains('ckin__player')) {
+            node.addEventListener('click', startDown);
+          }
+        });
+      }
+    }
+  });
+
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });

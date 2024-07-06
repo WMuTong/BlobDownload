@@ -132,14 +132,18 @@ const telegram = {
       };
       // 在video添加下载按钮
       function addButtonToVideo(video) {
-        const span = document.createElement('span');
-        span.textContent = "下载";
-        span.classList.add('download_video');
-
-        span.setAttribute('data-video-src', video.src);
-
-        video.parentNode.style.position = 'relative';
-        video.parentNode.insertBefore(span, video.nextSibling);
+        if(!!video.src) {
+          const span = document.createElement('span');
+          span.textContent = "下载";
+          span.classList.add('download_video');
+  
+          span.setAttribute('data-video-src', video.src);
+  
+          if(!video.parentNode.classList.contains('ckin__player')) {
+            video.parentNode.style.position = 'relative';
+          }
+          video.parentNode.insertBefore(span, video.nextSibling);
+        }
       };
 
       setTimeout(() => injectedScript(), 3000);
