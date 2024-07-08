@@ -29,7 +29,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["styles.css", "injected-script.js"],
+      "resources": ["styles.css", "injected-script.js", "injected-script-onlyfans.js"],
       "matches": ["<all_urls>"]
     }
   ],

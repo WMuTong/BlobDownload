@@ -51,16 +51,70 @@ const MessageObject = {
       }
     }
   },
-  'TELEGRAM': {
+  'ONLYFANS': {
+    mpds: [],
+    isInjectedScripted: false,
     todu: {
-      // 向 backgruand.js 传递下载 .mp4 文件的 url
-      'SENDTOFETCHMP4': (url) => {
-        chrome.runtime.sendMessage({
-          type: 'FETCH_MP4',
-          data: [url]
-        });
-      },
+      // 根据 mpd 下载
+      'ADDMPDURLTOPOPUP': (data) => {
+        const dataUrlIdx = MessageObject['ONLYFANS'].mpds.findIndex(m => m.url === data.url);
 
+        if (data.url && dataUrlIdx < 0) {
+          const title = document.querySelector("head title").textContent;
+
+          MessageObject['ONLYFANS'].mpds.push({
+            url: data.url,
+            title: sanitizeFilename(title)
+          });
+          chrome.runtime.sendMessage({
+            type: 'POPUP_ADDMMPD',
+            data: {
+              mpds: MessageObject['ONLYFANS'].mpds,
+              tabId: data.tabId
+            }
+          });
+        }
+      },
+      // 给 popup 提供当前页面所有 mpds url
+      'GETMPDURLS': (data, sendResponse) => {
+        sendResponse(MessageObject['ONLYFANS'].mpds);
+      },
+      'FETCHRANG': (data) => {
+        if (!MessageObject['ONLYFANS'].isInjectedScripted) {
+          function injectedScript() {
+            const script = document.createElement('script');
+            script.src = chrome.runtime.getURL('injected-script-onlyfans.js');
+            (document.head || document.documentElement).appendChild(script);
+            script.onload = function () {
+              script.remove();
+
+              // 传递消息给注入的脚本
+              window.postMessage({
+                type: 'POPUP_DOWNMPD',
+                params: { url: data.url, title: data.title }
+              }, '*');
+            };
+          };
+
+          injectedScript();
+          MessageObject['ONLYFANS'].isInjectedScripted = true;
+        }
+        else {
+          // 传递消息给注入的脚本
+          window.postMessage({
+            type: 'POPUP_DOWNMPD',
+            params: { url: data.url, title: data.title }
+          }, '*');
+        }
+        // chrome.runtime.sendMessage({
+        //   type: 'EXECUTESCRIPT',
+        //   data: {
+        //     // function: (url) => downloadVideoByOnlyFans(url),
+        //     target: { tabId: data.id },
+        //     args : [ data.url ]
+        //   }
+        // });
+      }
     }
   }
 };
@@ -84,7 +138,7 @@ const telegram = {
     // 匹配规则
     match: {
       // 匹配规则
-      urls: [
+      hrefs: [
         {
           // 获取 m3u8 内容的接口
           rule: /^https:\/\/web\.telegram\.org\/.*$/,
@@ -102,8 +156,8 @@ const telegram = {
    * @param {'beforeRequest'|'completed'} type '响应位置'
    */
   detectionLoactionHref: (href, type) => {
-    for (let i = 0; i < telegram.config.match.urls.length; i++) {
-      const rule = telegram.config.match.urls[i];
+    for (let i = 0; i < telegram.config.match.hrefs.length; i++) {
+      const rule = telegram.config.match.hrefs[i];
       if (href?.match(rule.rule)) {
         telegram.todo?.[rule.todo?.[type]]?.(href);
         break;
@@ -127,19 +181,18 @@ const telegram = {
         link.rel = 'stylesheet';
         link.type = 'text/css';
         link.href = chrome.runtime.getURL('styles.css');
-        console.log(link.href)
         document.head.appendChild(link);
       };
       // 在video添加下载按钮
       function addButtonToVideo(video) {
-        if(!!video.src) {
+        if (!!video.src) {
           const span = document.createElement('span');
           span.textContent = "下载";
           span.classList.add('download_video');
-  
+
           span.setAttribute('data-video-src', video.src);
-  
-          if(!video.parentNode.classList.contains('ckin__player')) {
+
+          if (!video.parentNode.classList.contains('ckin__player')) {
             video.parentNode.style.position = 'relative';
           }
           video.parentNode.insertBefore(span, video.nextSibling);
@@ -174,10 +227,61 @@ const telegram = {
 };
 /*-end-----------------Telegram私密群相关--------------------*/
 
+/*-start-----------------OnlyFans相关--------------------*/
+const onlyfans = {
+  config: {
+    // 匹配规则
+    match: {
+      // 匹配规则
+      hrefs: [
+        {
+          // 获取 m3u8 内容的接口
+          rule: /^https:\/\/onlyfans\.com\/.*$/,
+          // 在 todo 中定义的对应处理方法
+          todo: {
+            'completed': 'mutationObserverVideo'
+          }
+        }
+      ]
+    }
+  },
+  /**
+   * 检测网站地址符合的配置
+   * @param {<string>} href '网站地址'
+   * @param {'beforeRequest'|'completed'} type '响应位置'
+   */
+  detectionLoactionHref: (href, type) => {
+    for (let i = 0; i < onlyfans.config.match.hrefs.length; i++) {
+      const rule = onlyfans.config.match.hrefs[i];
+      if (href?.match(rule.rule)) {
+        onlyfans.todo?.[rule.todo?.[type]]?.(href);
+        break;
+      }
+    }
+  },
+  todo: {
+    // 监听视频标签
+    mutationObserverVideo() {
+      function injectedScript() {
+        const script = document.createElement('script');
+        script.src = chrome.runtime.getURL('injected-script.js');
+        (document.head || document.documentElement).appendChild(script);
+        script.onload = function () {
+          script.remove();
+        };
+      };
+      setTimeout(() => injectedScript(), 3000);
+    }
+  }
+};
+/*-end-----------------OnlyFans相关--------------------*/
+
 /*-start------------Document 相关------------------*/
 document.addEventListener('DOMContentLoaded', () => {
   // 尝试匹配 telegram 相关操作
   telegram.detectionLoactionHref(location.href, 'completed');
+  // 尝试匹配 onlyfans 相关操作
+  onlyfans.detectionLoactionHref(location.href, 'completed');
 })
 /*-end------------Document 相关------------------*/
 
