@@ -264,7 +264,7 @@ const onlyfans = {
     mutationObserverVideo() {
       function injectedScript() {
         const script = document.createElement('script');
-        script.src = chrome.runtime.getURL('injected-script.js');
+        script.src = chrome.runtime.getURL('injected-script-onlyfans.js');
         (document.head || document.documentElement).appendChild(script);
         script.onload = function () {
           script.remove();

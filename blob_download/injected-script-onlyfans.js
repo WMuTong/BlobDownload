@@ -8,46 +8,41 @@ async function fetchRange(url, start, end) {
         credentials: 'include'
     });
 
+    console.log(response.status)
     if (response.status === 206 || response.ok) {
-        // const contentRange = response.headers.get('Content-Range');
-        // console.log(contentRange);
-        // if (contentRange) {
-        //     const sizeMatch = contentRange.match(/\/(\d+)$/);
-        //     console.log(sizeMatch)
-        //     if (sizeMatch) {
-        //         const fileSize = parseInt(sizeMatch[1], 10);
-        //         return { chunk: await response.blob(), fileSize };
-        //     }
-        // }
         return { chunk: await response.blob() };
-    } else {
-        throw new Error(`Failed to fetch range ${start}-${end}: ${response.status} ${response.statusText}`);
+    }
+    else {
+        return {}
     }
 }
+
 async function downloadVideoByOnlyFans(url, title = new Date().getTime()) {
     try {
         // 解析url参数
         const urlAfter = url.replace('.mpd', '_720p.mp4');
         // 获取视频分片大小
-        const chunkSize = 524288;
+        // const chunkSize = 524288;
+        const chunkSize = 1024288;
         // 片段集合
         const chunks = [];
 
         // 文件总大小，从请求中获取并更新
-        let fileSize = chunkSize + 1000;
+        let fileSize = 0;
 
         // 起始值
         let start = 0;
 
         const whileFetch = async () => {
-            // const end = Math.min(start + chunkSize - 1, fileSize - 1);
-            const end = start + chunkSize - 1;
+            const end = !!fileSize ? Math.min(start + chunkSize - 1, fileSize - 1) : start + chunkSize - 1;
             const { chunk } = await fetchRange(urlAfter, start, end);
 
-            chunks.push(chunk);
-            start += chunkSize;
-
-            await whileFetch();
+            console.log(!!chunk, urlAfter, start, end)
+            if (!!chunk) {
+                chunks.push(chunk);
+                start += chunkSize;
+                await whileFetch();
+            }
         };
         await whileFetch();
 
@@ -72,14 +67,17 @@ async function downloadVideoByOnlyFans(url, title = new Date().getTime()) {
 window.addEventListener('message', (event) => {
     if (event.source !== window) return;
     if (event.type !== 'message') return;
-    const [type, todu] = event.data.type.split('_');
-    if (type && type === 'POPUP') {
-        switch (todu) {
-            case "DOWNMPD":
-                downloadVideoByOnlyFans(event.data.params.url, event.data.params.title);
-                break;
-            default:
-                break;
+
+    if (event.data.type && event.data.type.indexOf('POPUP') > -1) {
+        const [type, todu] = event.data.type.split('_');
+        if (type && type === 'POPUP') {
+            switch (todu) {
+                case "DOWNMPD":
+                    downloadVideoByOnlyFans(event.data.params.url, event.data.params.title);
+                    break;
+                default:
+                    break;
+            }
         }
     }
 });
