@@ -9,7 +9,7 @@ const MessageObject = {
       },
       'ADDMMPD': (data) => {
         data?.mpds?.map(mpd => {
-          $('#list').append(`<div class="item" data-url="${mpd.url}"  data-ms-type="ONLYFANS_FETCHRANG" data-title="${mpd.title}">${mpd.title}</div>`);
+          $('#list').append(`<div class="item" data-url="${mpd.url}"  data-ms-type="ONLYFANS_FETCHRANG" data-squad="onlyfans" data-title="${mpd.title}">${mpd.title}</div>`);
         })
       }
     }
@@ -61,19 +61,24 @@ $(function () {
     const url = $(this).data("url");
     const title = $(this).data("title");
     const msType = $(this).data("ms-type");
+    const squad = $(this).data("squad");
 
     chrome.tabs.query(
       { active: true },
       tabs => {
-        console.log(msType, tabs);
         tabs?.map(tab => {
-          chrome.tabs.sendMessage(
-            tab.id,
-            {
-              type: msType,
-              data: JSON.stringify({url, title, id: tab.id})
-            }
-          )
+          if(
+            (squad && tab.url.indexOf(squad) > -1) ||
+            !squad
+          ) {
+              chrome.tabs.sendMessage(
+                tab.id,
+                {
+                  type: msType,
+                  data: JSON.stringify({url, title, id: tab.id})
+                }
+              )
+          }
         })
       }
     );

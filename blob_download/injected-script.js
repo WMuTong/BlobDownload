@@ -82,7 +82,7 @@ const observer = new MutationObserver((mutationsList) => {
     for (const mutation of mutationsList) {
         if (mutation.type === 'childList') {
             mutation.addedNodes.forEach(node => {
-                if (node.tagName === 'DIV' && node.classList.contains('download_video')) {
+                if (node.tagName === 'SPAN' && node.classList.contains('download_video')) {
                     node.addEventListener('click', startDown);
                 }
             });

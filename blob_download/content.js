@@ -80,40 +80,10 @@ const MessageObject = {
         sendResponse(MessageObject['ONLYFANS'].mpds);
       },
       'FETCHRANG': (data) => {
-        if (!MessageObject['ONLYFANS'].isInjectedScripted) {
-          function injectedScript() {
-            const script = document.createElement('script');
-            script.src = chrome.runtime.getURL('injected-script-onlyfans.js');
-            (document.head || document.documentElement).appendChild(script);
-            script.onload = function () {
-              script.remove();
-
-              // 传递消息给注入的脚本
-              window.postMessage({
-                type: 'POPUP_DOWNMPD',
-                params: { url: data.url, title: data.title }
-              }, '*');
-            };
-          };
-
-          injectedScript();
-          MessageObject['ONLYFANS'].isInjectedScripted = true;
-        }
-        else {
-          // 传递消息给注入的脚本
-          window.postMessage({
-            type: 'POPUP_DOWNMPD',
-            params: { url: data.url, title: data.title }
-          }, '*');
-        }
-        // chrome.runtime.sendMessage({
-        //   type: 'EXECUTESCRIPT',
-        //   data: {
-        //     // function: (url) => downloadVideoByOnlyFans(url),
-        //     target: { tabId: data.id },
-        //     args : [ data.url ]
-        //   }
-        // });
+        window.postMessage({
+          type: 'POPUP_DOWNMPD',
+          params: { url: data.url, title: data.title }
+        }, '*');
       }
     }
   }
@@ -239,7 +209,7 @@ const onlyfans = {
           rule: /^https:\/\/onlyfans\.com\/.*$/,
           // 在 todo 中定义的对应处理方法
           todo: {
-            'completed': 'mutationObserverVideo'
+            'completed': 'injectedScript'
           }
         }
       ]
@@ -260,17 +230,14 @@ const onlyfans = {
     }
   },
   todo: {
-    // 监听视频标签
-    mutationObserverVideo() {
-      function injectedScript() {
-        const script = document.createElement('script');
-        script.src = chrome.runtime.getURL('injected-script-onlyfans.js');
-        (document.head || document.documentElement).appendChild(script);
-        script.onload = function () {
-          script.remove();
-        };
+    // 注入js文件
+    injectedScript() {
+      const script = document.createElement('script');
+      script.src = chrome.runtime.getURL('injected-script-onlyfans.js');
+      (document.head || document.documentElement).appendChild(script);
+      script.onload = function () {
+        script.remove();
       };
-      setTimeout(() => injectedScript(), 3000);
     }
   }
 };
