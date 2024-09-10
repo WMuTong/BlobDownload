@@ -1,0 +1,13 @@
+prefix=/Users/mutong/Documents/tools/chrome_plug_in/BlobDownload/m3u8_download/conda
+exec_prefix=/Users/mutong/Documents/tools/chrome_plug_in/BlobDownload/m3u8_download/conda
+libdir=/Users/mutong/Documents/tools/chrome_plug_in/BlobDownload/m3u8_download/conda/lib
+sharedlibdir=/Users/mutong/Documents/tools/chrome_plug_in/BlobDownload/m3u8_download/conda/lib
+includedir=/Users/mutong/Documents/tools/chrome_plug_in/BlobDownload/m3u8_download/conda/include
+
+Name: zlib
+Description: zlib compression library
+Version: 1.2.13
+
+Requires:
+Libs: -L${libdir} -L${sharedlibdir} -lz
+Cflags: -I${includedir}

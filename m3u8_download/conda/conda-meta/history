@@ -1,0 +1,39 @@
+==> 2024-09-07 17:10:51 <==
+# cmd: /opt/anaconda3/bin/conda create --prefix=./conda python=3.8
+# conda version: 24.1.2
++defaults/osx-arm64::ca-certificates-2024.7.2-hca03da5_0
++defaults/osx-arm64::libcxx-14.0.6-h848a8c0_0
++defaults/osx-arm64::libffi-3.4.4-hca03da5_1
++defaults/osx-arm64::ncurses-6.4-h313beb8_0
++defaults/osx-arm64::openssl-3.0.15-h80987f9_0
++defaults/osx-arm64::pip-24.2-py38hca03da5_0
++defaults/osx-arm64::python-3.8.19-hb885b13_0
++defaults/osx-arm64::readline-8.2-h1a28f6b_0
++defaults/osx-arm64::setuptools-72.1.0-py38hca03da5_0
++defaults/osx-arm64::sqlite-3.45.3-h80987f9_0
++defaults/osx-arm64::tk-8.6.14-h6ba3021_0
++defaults/osx-arm64::wheel-0.43.0-py38hca03da5_0
++defaults/osx-arm64::xz-5.4.6-h80987f9_1
++defaults/osx-arm64::zlib-1.2.13-h18a0788_1
+# update specs: ['python=3.8']
+==> 2024-09-07 17:12:18 <==
+# cmd: /opt/anaconda3/bin/conda install requests
+# conda version: 24.1.2
++defaults/noarch::charset-normalizer-3.3.2-pyhd3eb1b0_0
++defaults/osx-arm64::brotli-python-1.0.9-py38h313beb8_8
++defaults/osx-arm64::certifi-2024.8.30-py38hca03da5_0
++defaults/osx-arm64::idna-3.7-py38hca03da5_0
++defaults/osx-arm64::pysocks-1.7.1-py38hca03da5_0
++defaults/osx-arm64::requests-2.32.3-py38hca03da5_0
++defaults/osx-arm64::urllib3-2.2.2-py38hca03da5_0
+# update specs: ['requests']
+==> 2024-09-07 17:12:41 <==
+# cmd: /opt/anaconda3/bin/conda install chardet
+# conda version: 24.1.2
++defaults/osx-arm64::chardet-4.0.0-py38hca03da5_1003
+# update specs: ['chardet']
+==> 2024-09-07 17:12:59 <==
+# cmd: /opt/anaconda3/bin/conda install tqdm
+# conda version: 24.1.2
++defaults/osx-arm64::tqdm-4.66.5-py38h33ce5c2_0
+# update specs: ['tqdm']

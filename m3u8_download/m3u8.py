@@ -92,9 +92,6 @@ concat_list_filen_path = os.path.join(download_path, concat_list_filename)
 # 读取已存在的文件列表
 existing_files = set(read_concat_list(concat_list_filen_path))
 
-# 跳过下载的 TS 文件数量
-continue_decrypted_file_n = 0
-
 for i, ts_url in enumerate(ts_urls):
     ts_filename = f"{m3u8_filename_title}_{i}.ts"
     decrypted_filename = f"{m3u8_filename_title}_{i}_out.ts"
@@ -103,13 +100,11 @@ for i, ts_url in enumerate(ts_urls):
     decrypted_file_path = os.path.join(download_path, decrypted_filename)
     
     # 该条 ts 文件已存在，跳过下载和解密
-    if decrypted_file_path in existing_files:
-        continue_decrypted_file_n += 1
+    # 检查 decrypted_file_path 是否是 existing_files 中某个项的一部分
+    if any(decrypted_file_path in file for file in existing_files):
+        download_bar.update(1)
         continue
-    else:
-        continue_decrypted_file_n = 1
     
-    download_bar.update(continue_decrypted_file_n)
     # 下载 TS 文件
     ts_response = requests.get(ts_url)
     # 检查响应状态码
@@ -158,6 +153,7 @@ for i, ts_url in enumerate(ts_urls):
     decrypted_files_path.append(decrypted_file_path)
     # 将解密后的TS文件路径写入合并列表文件
     write_concat_list_entry(os.path.join('../', decrypted_file_path), concat_list_filen_path)
+    # write_concat_list_entry(decrypted_file_path, concat_list_filen_path)
 
 print("下载并解密完成！")
 print("合并中...")
@@ -180,8 +176,11 @@ if result.returncode != 0:
 else:
     print(f"合并完成，输出文件：{output_filename}")
     print("清理临时文件...")
+    
     # 删除临时文件
-    for decrypted_filename in decrypted_files_path:
-        os.remove(decrypted_filename)
-    os.remove(concat_list_filen_path)
+    for filePath in existing_files:
+        print(f"删除文件：{os.path.join(os.path.abspath(os.path.dirname(__file__)), filePath.replace('../', ''))}")
+        os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), filePath.replace('../', '')))
+    
+    # os.remove(concat_list_filen_path)
     print("清理完成! 圆满完成所有步骤！！！")

@@ -1,0 +1,11 @@
+prefix=/Users/mutong/Documents/tools/chrome_plug_in/BlobDownload/m3u8_download/conda
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+toolexeclibdir=${libdir}
+includedir=/Users/mutong/Documents/tools/chrome_plug_in/BlobDownload/m3u8_download/conda/include
+
+Name: libffi
+Description: Library supporting Foreign Function Interfaces
+Version: 3.4.4
+Libs: -L${toolexeclibdir} -lffi
+Cflags: -I${includedir}
