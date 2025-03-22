@@ -8,7 +8,8 @@ const haijiao = {
       urls: [
         {
           // 获取 m3u8 内容的接口
-          rule: /^https:\/\/www\.haijiao\.com\/api\/address\/.*$/,
+          // rule: /^https:\/\/www\.haijiao\.com\/api\/address\/.*$/,
+          rule: /^https:\/\/.+\/video\/.+\.m3u8$/,
           // 在 haijiao.todo 中定义的对应处理方法
           todo: {
             'completed': 'addAwaitDownM3u8Url'
@@ -34,6 +35,7 @@ const haijiao = {
   // 执行
   todo: {
     "addAwaitDownM3u8Url": (details) => {
+      console.log(details);
       chrome.tabs.sendMessage(
         details?.tabId,
         {
@@ -157,6 +159,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 /*-start-----------------下载相关--------------------*/
 // 通过url将文件下载到本地
 async function downloadFile(url, name) {
+  console.log(url)
   try {
     const response = await fetch(url);
     if (!response.ok) {

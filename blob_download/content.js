@@ -16,11 +16,15 @@ const MessageObject = {
           .then(response => response.text())
           .then(_data => {
             const { uri, iv, ts, method } = extractKeyInfo(_data);
+            // console.log({ uri, iv, ts, method });
+
+            let urlarr = data.url.split('/');
+            let keyUrl = urlarr.slice(0, urlarr.length - 1).join('/');
 
             // 通知 background 下载 key 文件
             chrome.runtime.sendMessage({
               type: 'DOWNLOAD',
-              data: [uri, `${data.title}.key`]
+              data: [`${keyUrl}/${uri}`, `${data.title}.key`]
             });
           })
           .catch(error => console.error('Error fetching response:', error));
@@ -114,7 +118,7 @@ const telegram = {
           rule: /^https:\/\/web\.telegram\.org\/.*$/,
           // 在 telegram.todo 中定义的对应处理方法
           todo: {
-            'completed': 'mutationObserverVideo'
+            'completed': 'mutationObserverVideoAndImage'
           }
         }
       ]
@@ -135,8 +139,8 @@ const telegram = {
     }
   },
   todo: {
-    // 监听视频标签
-    mutationObserverVideo() {
+    // 监听视频\图片标签
+    mutationObserverVideoAndImage() {
       function injectedScript() {
         const script = document.createElement('script');
         script.src = chrome.runtime.getURL('injected-script.js');
@@ -169,6 +173,22 @@ const telegram = {
         }
       };
 
+      // 在img添加下载按钮
+      function addButtonToImage(img) {
+        if (!!img.src) {
+          const span = document.createElement('span');
+          span.textContent = "下载";
+          span.classList.add('download_img');
+
+          span.setAttribute('data-img-src', img.src);
+
+          if (!img.parentNode.classList.contains('album-item-media')) {
+            img.parentNode.style.position = 'relative';
+          }
+          img.parentNode.insertBefore(span, img.nextSibling);
+        }
+      };
+
       setTimeout(() => injectedScript(), 3000);
       addCSSFile();
       document.querySelectorAll('video').forEach(addButtonToVideo);
@@ -179,6 +199,9 @@ const telegram = {
             mutation.addedNodes.forEach(node => {
               if (node.tagName === 'VIDEO') {
                 addButtonToVideo(node);
+              }
+              if (node.tagName === 'IMG') {
+                addButtonToImage(node);
               }
               // else if (node.querySelectorAll) {
               //   node.querySelectorAll('video').forEach(addSpanToVideo);
@@ -258,7 +281,8 @@ function extractKeyInfo(m3u8Content) {
   const uriRegex = /URI="([^"]+)"/;
   const ivRegex = /IV=([^,]+)/;
   const methodRegex = /METHOD=([^,]+)/;
-  const tsRegex = /https:\/\/ts2\.hjbd81\.top\/hjstore\/video\/\d{8}\/[a-z0-9]+\/[a-z0-9_\-\.\?\&\=~]+/gi;
+  const tsRegex = /https:\/\/ts3\.hjbd81\.top\/hjstore\/video\/\d{8}\/[a-z0-9]+\/[a-z0-9_\-\.\?\&\=~]+/gi;
+  // const tsRegex = /\/hjstore\/video\/([^\/]+)\/([^\/]+)\/([^\/]+\.ts)/gi;
 
   const uriMatch = m3u8Content.match(uriRegex);
   const ivMatch = m3u8Content.match(ivRegex);
